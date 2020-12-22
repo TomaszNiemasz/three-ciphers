@@ -1,136 +1,105 @@
+#############################################
 """
     File name: main.py
+    Project name:
     Author: Tomasz Jasiński
     Python Version: 3.8
+    Description:
 """
 
+# TODO: documentation and some better menu
+
+#############################################
+
 import os
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import (
+	Cipher,
+	algorithms,
+	modes
+)
 
 
-class TripleDES:
-	@staticmethod
-	def new_encryptor(initialization_vector, secret_key):
-		return Cipher(
-			algorithms.TripleDES(secret_key),
-			modes.CBC(initialization_vector)
-		).encryptor()
-
-	@staticmethod
-	def new_decryptor(initialization_vector, secret_key):
-		return Cipher(
-			algorithms.TripleDES(secret_key),
-			modes.CBC(initialization_vector)
-		).decryptor()
-
-	@staticmethod
-	def get_block_size():
-		return int(algorithms.TripleDES.block_size / 8)
-
-	@staticmethod
-	def get_key_size():
-		return int(min(algorithms.TripleDES.key_sizes) / 8)
+class AsymmetricCipher(object):
+	pass
 
 
-class IDEA:
-	@staticmethod
-	def new_encryptor(initialization_vector, secret_key):
-		return Cipher(
-			algorithms.IDEA(secret_key),
-			modes.CBC(initialization_vector)
-		).encryptor()
-
-	@staticmethod
-	def new_decryptor(initialization_vector, secret_key):
-		return Cipher(
-			algorithms.IDEA(secret_key),
-			modes.CBC(initialization_vector)
-		).decryptor()
-
-	@staticmethod
-	def get_block_size():
-		return int(algorithms.IDEA.block_size / 8)
-
-	@staticmethod
-	def get_key_size():
-		return int(min(algorithms.IDEA.key_sizes) / 8)
-
-
-class AES:
-	@staticmethod
-	def new_encryptor(initialization_vector, secret_key):
-		return Cipher(
-			algorithms.AES(secret_key),
-			modes.CBC(initialization_vector)
-		).encryptor()
-
-	@staticmethod
-	def new_decryptor(initialization_vector, secret_key):
-		return Cipher(
-			algorithms.AES(secret_key),
-			modes.CBC(initialization_vector)
-		).decryptor()
-
-	@staticmethod
-	def get_block_size():
-		return int(algorithms.AES.block_size / 8)
-
-	@staticmethod
-	def get_key_size():
-		return int(min(algorithms.AES.key_sizes) / 8)
-
-
-class UtilityClass:
-	ciphers_dict = {
-		"1": AES,
-		"2": TripleDES,
-		"3": IDEA
+class SymmetricCipher(object):
+	symmetric_alghorithms = {
+		"AES": algorithms.AES,
+		"TripleDES": algorithms.TripleDES,
+		"IDEA": algorithms.IDEA
 	}
 
+	def __init__(self, alghorithm):
+		self.alghorithm = alghorithm
+		self.alghorithm.block_size_in_bytes = int(alghorithm.block_size / 8)
+		self.alghorithm.key_size_in_bytes = int(min(alghorithm.key_sizes) / 8)
+
+	def encrypt(self, plaintext: bytes, secret_key: bytes) -> tuple:
+		padder = padding.PKCS7(self.alghorithm.block_size).padder()
+		iv = os.urandom(self.alghorithm.block_size_in_bytes)
+		encryptor = Cipher(self.alghorithm(secret_key), modes.CBC(iv)).encryptor()
+		return (
+			iv,
+			encryptor.update(
+				padder.update(plaintext) + padder.finalize()
+			) + encryptor.finalize()
+		)
+
+	def decrypt(self, ciphertext: tuple, secret_key: bytes) -> str:
+		unpadder = padding.PKCS7(self.alghorithm.block_size).unpadder()
+		decryptor = Cipher(self.alghorithm(secret_key), modes.CBC(ciphertext[0])).decryptor()
+		return (
+				unpadder.update(
+					decryptor.update(ciphertext[1]) + decryptor.finalize()
+				) + unpadder.finalize()
+		).decode('utf-8')
+
+
+class Controller:
 	@staticmethod
-	def new_initialization_vector(iv_size):
-		return os.urandom(iv_size)
-
-	@classmethod
-	def encrypt(cls, plaintext: bytes, secret_key: bytes) -> tuple:
-		initialization_vector = cls.new_initialization_vector(picked_cipher.get_block_size())
-		encryptor = picked_cipher.new_encryptor(initialization_vector, secret_key)
-		encrypted_message = encryptor.update(plaintext) + encryptor.finalize()
-		return initialization_vector, encrypted_message
-
-	@staticmethod
-	def decrypt(ciphertext: tuple, secret_key: bytes) -> str:
-		decryptor = picked_cipher.new_decryptor(ciphertext[0], secret_key)
-		return (decryptor.update(ciphertext[1]) + decryptor.finalize()).decode('utf-8')
-
-	@classmethod
-	def pick_cipher(cls):
-		return cls.ciphers_dict[input("\n1. Use AES\n2. Use TripleDES\n3. Use IDEA\n")]
+	def select_alghorithm():
+		selectable_alghorithms = {
+			i + 1: v for i, v in enumerate(SymmetricCipher.symmetric_alghorithms.keys())
+		}
+		print("--SELECT ALGHORITHM--")
+		for i in selectable_alghorithms:
+			print(f"{i}:{selectable_alghorithms[i]}")
+		return SymmetricCipher.symmetric_alghorithms[
+			selectable_alghorithms[
+				int(input("> "))
+			]
+		]
 
 	@staticmethod
 	def enter_plaintext():
 		return input(
-			f"\nEnter a plaintext to encrypt (long for multiple of {picked_cipher.get_block_size()}): "
+			f"\nEnter a plaintext to encrypt\n>"
 		).encode('utf-8')
 
 	@staticmethod
-	def enter_key():
+	def enter_key(key_size):
 		return input(
-			f"\nEnter a secret key (long for multiple of {picked_cipher.get_key_size()}): "
+			f"\nEnter a secret key (long for multiple of {key_size})\n>"
 		).encode('utf-8')
 
 
-if __name__ == '__main__':
+def main():
 	while True:
-		picked_cipher = UtilityClass.pick_cipher()
-		entered_plaintext = UtilityClass.enter_plaintext()
-		entered_key = UtilityClass.enter_key()
+		cipher = SymmetricCipher(Controller.select_alghorithm())
+		entered_plaintext = Controller.enter_plaintext()
+		entered_key = Controller.enter_key(cipher.alghorithm.key_size_in_bytes)
 
-		resulting_ciphertext = UtilityClass.encrypt(entered_plaintext, entered_key)
-		print(f"\n->RESULTING CIPHERTEXT: {resulting_ciphertext}\n")
+		resulting_ciphertext = cipher.encrypt(entered_plaintext, entered_key)
+		print(f"\nRESULTING CIPHERTEXT:\n>>{resulting_ciphertext}\n")
 
 		if input("Decrypt your encrypted data?(y/n): ") == "y":
-			decrypted_message = UtilityClass.decrypt(resulting_ciphertext, entered_key)
-			print(f"\n->DECRYPTED MESSAGE: {decrypted_message}\n")
+			decrypted_message = cipher.decrypt(resulting_ciphertext, entered_key)
+			print(f"\nDECRYPTED MESSAGE:\n>>{decrypted_message}\n")
 		else:
 			continue
+
+
+if __name__ == '__main__':
+	main()
