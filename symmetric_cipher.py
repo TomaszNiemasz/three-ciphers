@@ -20,7 +20,7 @@ from cryptography.hazmat.primitives.ciphers import (
 
 class SymmetricCipher(object):
     encryption_algorithms = {
-        # List of available algorithms
+        # List of available encryption algorithms
         "AES": algorithms.AES,
         "TripleDES": algorithms.TripleDES,
         "IDEA": algorithms.IDEA
@@ -33,7 +33,9 @@ class SymmetricCipher(object):
 
     @staticmethod
     def random_string(string_length: int) -> str:
-        # Generates random string with given length from ascii letters and digits tables
+        """
+        Generate random string with given length from ascii letters and digits tables
+        """
         alphabet = string.ascii_letters + string.digits
         return (
             ''.join(
@@ -43,7 +45,7 @@ class SymmetricCipher(object):
 
     def encrypt(self, plaintext: str, secret_key: str) -> Tuple[str, bytes, bytes]:
         """
-        Generating proper padding and initialization vector,
+        Generate proper padding and initialization vector,
         then encrypt given plaintext with given secret key,
         using chosen algortihm
         """

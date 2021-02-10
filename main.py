@@ -1,4 +1,3 @@
-#############################################
 """
     File name: main.py
     Project name: three-ciphers
@@ -7,10 +6,6 @@
     Description:
 """
 
-# TODO: documentation and some better menu
-
-#############################################
-
 import PySimpleGUI as sg
 
 from symmetric_cipher import SymmetricCipher
@@ -18,9 +13,19 @@ from asymmetric_cipher import AsymmetricCipher
 
 
 def simplegui_menu():
+    """
+    Create instance of PySimpleGUI:
+    -> define layouts: frame_layout and layout
+    -> initiate window object
+    -> run event loop
+    -> closes window object
+    """
+
     global symmetric_cipher, asymmetric_cipher
     symmetric_algorithms = [key for key in SymmetricCipher.encryption_algorithms.keys()]
 
+# GUI settings
+########################################
     sg.theme('DarkGrey2')
     sg.SetOptions(
         element_padding=(
@@ -44,6 +49,8 @@ def simplegui_menu():
             size=(15, 2)
         )
 
+# Layouts definitions
+########################################
     frame_layout = [
         [
             text_label('Encryption'),
@@ -159,17 +166,25 @@ def simplegui_menu():
         ]
     ]
 
+# Create window object
+########################################
     window = sg.Window(
         'CryptoPlayground',
         layout
     )
 
+# Run event loop
+########################################
     while True:
         event, values = window.read()
 
+    # Close window
+    ########################################
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
 
+        # User chose asymmetric encryption
+        ########################################
         elif event == '-ASYMMETRIC-':
             window['-SECRET-KEY-'].hide_row()
             window['-AUTH-ALGORITHM-'].unhide_row()
@@ -181,6 +196,8 @@ def simplegui_menu():
                 ]
             )
 
+    # User chose symmetric encryption
+    ########################################
         elif event == '-SYMMETRIC-':
             window['-SECRET-KEY-'].unhide_row()
             window['-AUTH-ALGORITHM-'].hide_row()
@@ -191,6 +208,8 @@ def simplegui_menu():
                 ]
             )
 
+    # User chose encryption algorithm
+    ########################################
         elif event == '-CRYPT-ALGORITHM-':
             if values['-SYMMETRIC-']:
                 symmetric_cipher = SymmetricCipher(
@@ -206,7 +225,6 @@ def simplegui_menu():
                         )
                     ]
                 )
-
             elif values['-ASYMMETRIC-']:
                 window['-AUTH-ALGORITHM-'].update(set_to_index=1)
                 asymmetric_cipher = AsymmetricCipher(
@@ -226,10 +244,11 @@ def simplegui_menu():
 
                     ]
                 )
-
             window['Random Key'].update(disabled=True)
             window['Encrypt'].update(disabled=True)
 
+    # User chose authentication algorithm
+    ########################################
         elif event == '-AUTH-ALGORITHM-':
             asymmetric_cipher = AsymmetricCipher(
                 encryption_algorithm=AsymmetricCipher.encryption_algorithms[
@@ -240,6 +259,8 @@ def simplegui_menu():
                 ]
             )
 
+    # User chose encryption key size
+    ########################################
         elif event == '-CRYPT-KEY-SIZE-':
             if values['-SYMMETRIC-']:
                 window['Random Key'].update(disabled=False)
@@ -251,12 +272,16 @@ def simplegui_menu():
             elif values['-ASYMMETRIC-']:
                 window['Encrypt'].update(disabled=False)
 
+    # User touched secret key input
+    ########################################
         elif event == '-SECRET-KEY-':
             if len(values['-SECRET-KEY-']) * 8 == values['-CRYPT-KEY-SIZE-']:
                 window['Encrypt'].update(disabled=False)
             else:
                 window['Encrypt'].update(disabled=True)
 
+    # User triggered encryption button
+    ########################################
         elif event == 'Encrypt':
             if values['-SYMMETRIC-']:
                 (stored_key,
@@ -296,6 +321,8 @@ def simplegui_menu():
 
             window['Decrypt'].update(disabled=False)
 
+    # User triggered decryption button
+    ########################################
         elif event == 'Decrypt':
             if values['-SYMMETRIC-']:
                 decrypted_message = symmetric_cipher.decrypt(
@@ -324,6 +351,8 @@ def simplegui_menu():
 
             window['Decrypt'].update(disabled=True)
 
+    # User triggered key generating button
+    ########################################
         elif event == 'Random Key':
             window['-SECRET-KEY-'].update(
                 symmetric_cipher.random_string(
@@ -338,6 +367,8 @@ def simplegui_menu():
         #     print(f'{k}: {values[k]}')
         # print('\n')
 
+# Close window object
+########################################
     window.close()
 
 

@@ -15,6 +15,7 @@ from cryptography.hazmat.primitives.asymmetric import (
 
 class RSA:
     key_sizes = [
+        # List of available key sizes
         1024,
         2048,
         4096
@@ -22,6 +23,9 @@ class RSA:
 
     @staticmethod
     def new_key_pair(key_size: int):
+        """
+        Generate new key pair
+        """
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=key_size
@@ -32,6 +36,10 @@ class RSA:
 
     @staticmethod
     def sign(plaintext: str, private_key) -> bytes:
+        """
+        Create digital signature from given message and signature key,
+        using additional padding and hashing function
+        """
         signature = private_key.sign(
             plaintext.encode(),
             padding.PSS(
@@ -44,6 +52,10 @@ class RSA:
 
     @staticmethod
     def verify(plaintext: str, signature: bytes, public_key) -> bool:
+        """
+        Authenticate given message with given signature and verification key,
+        using additional padding and hashing function
+        """
         try:
             public_key.verify(
                 signature,
@@ -61,6 +73,10 @@ class RSA:
 
     @staticmethod
     def encrypt(plaintext: str, public_key) -> bytes:
+        """
+        Encrypt given plaintext with given public key,
+        using additional padding and hashing function
+        """
         ciphertext = public_key.encrypt(
             plaintext.encode(),
             padding.OAEP(
@@ -73,6 +89,10 @@ class RSA:
 
     @staticmethod
     def decrypt(ciphertext: bytes, private_key) -> str:
+        """
+        Decrypt given ciphertext with given private key,
+        using additional padding and hashing function
+        """
         plaintext = private_key.decrypt(
             ciphertext,
             padding.OAEP(
