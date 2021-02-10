@@ -183,8 +183,8 @@ def simplegui_menu():
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
 
-        # User chose asymmetric encryption
-        ########################################
+    # User chose asymmetric encryption
+    ########################################
         elif event == '-ASYMMETRIC-':
             window['-SECRET-KEY-'].hide_row()
             window['-AUTH-ALGORITHM-'].unhide_row()
